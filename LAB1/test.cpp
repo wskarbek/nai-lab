@@ -15,6 +15,7 @@ int main( int argc, char** argv ) {
     do {
         cv::Mat frame;
         if ( cap.read( frame ) ) {
+            cv::flip(frame, frame, +1);
             cv::imshow( "Not-yet smart windown", frame );
         } else {
             // stream finished
