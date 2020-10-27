@@ -22,33 +22,46 @@ int main(int argc, char** argv) {
 	}
 	std::cout << "Video size: " << cap.get( cv::CAP_PROP_FRAME_WIDTH ) << "x" << cap.get( cv::CAP_PROP_FRAME_HEIGHT ) << std::endl;
 		
-    cv::Mat frame, hsv;
+    cv::Mat frame, hsv, hsvno;
+
 	cv::namedWindow("HSV", cv::WINDOW_AUTOSIZE);
-	cv::createTrackbar("min H", "HSV", &rangeMinH, 255);
-	cv::createTrackbar("max H", "HSV", &rangeMaxH, 255);
-	cv::createTrackbar("min S", "HSV", &rangeMinS, 255);
-	cv::createTrackbar("max S", "HSV", &rangeMaxS, 255);
-	cv::createTrackbar("min V", "HSV", &rangeMinV, 255);
-	cv::createTrackbar("max V", "HSV", &rangeMaxV, 255);
-    if ( cap.read( frame ) ) {
-		cv::resize(frame, frame, cv::Size(camWidth, camHeight));
-		cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
-		cv::GaussianBlur(frame, frame, cv::Size(15, 15), 0);
-		do {
+
+	cv::createTrackbar("min H", "In range", &rangeMinH, 255);
+	cv::createTrackbar("max H", "In range", &rangeMaxH, 255);
+	cv::createTrackbar("min S", "In range", &rangeMinS, 255);
+	cv::createTrackbar("max S", "In range", &rangeMaxS, 255);
+	cv::createTrackbar("min V", "In range", &rangeMinV, 255);
+	cv::createTrackbar("max V", "In range", &rangeMaxV, 255);
+
+	do {
+   		if ( cap.read( frame ) ) {
+
+			cv::resize(frame, frame, cv::Size(camWidth, camHeight));
+
 			cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
+			cv::cvtColor(frame, hsvno, cv::COLOR_BGR2HSV);
+
+			cv::GaussianBlur(hsv, hsv, cv::Size(15, 15), 0);
+
 			cv::inRange(hsv, cv::Scalar(rangeMinH, rangeMinS, rangeMinV), cv::Scalar(rangeMaxH, rangeMaxS, rangeMaxV), hsv);
 			cv::imshow( "Frame", frame );
-			cv::imshow( "HSV", hsv);
+			cv::imshow( "In range", hsv);
+			cv::imshow( "HSV", hsvno);
+
 			key = (cv::waitKey(1000.0/60.0)&0x0ff);
+
 			if (key == 27) break;
+
 			if (key == 'x') {
 				auto r = cv::selectROI("Frame", frame);
 				cv::Mat roi = frame(r);
 				cv::imshow("ROI", roi);
 				cv::imwrite("roi.bmp", roi);
 			}			
-		} while (true);
-    }
+    	}
+	} while (true);
+
 	cv::waitKey(0);
+
     return 0;
 }
