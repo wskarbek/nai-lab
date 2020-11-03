@@ -60,7 +60,7 @@ int main()
             		rectangle(frame, table[i], {255, 0, 0}, 2);
         		}
 
-        		if(table[0].y <= table[1].y + 50 || table[1].y <= table[0].y + 50){
+        		if(table[0].y <= table[1].y + 50 && table[1].y <= table[0].y + 50){
         			line(
 						frame,
         				{table[0].x + table ->width /2, table[0].y + table->height/ 2},
