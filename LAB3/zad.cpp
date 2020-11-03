@@ -10,8 +10,8 @@ using namespace cv;
 
 int main()
 {
-	int loRed[3] = {160, 140, 120};
-	int hiRed[3] = {200, 220, 255};
+	int loRed[3] = {0, 0, 220};
+	int hiRed[3] = {4, 27, 255};
 	int area;
 
 	char key;
@@ -73,7 +73,7 @@ int main()
 		}
 		key = (cv::waitKey(1000.0/60.0)&0x0ff);
 		if (key == 27) break;
-        imshow("Red detector", frame);
+        imshow("Plush detector", frame);
 	} while (true);
 	return 0;
 }
