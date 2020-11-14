@@ -73,13 +73,64 @@ void findAndCutDocument(Mat in, Mat &out) {
 void rotateDocument(Mat in, Mat &out) {        
 	int scanHalfX = in.cols / 2;
 	int scanHalfY = in.rows / 2;
+
+	int cx, cy;
+
+	int loMarker[3] = {116, 56, 206};
+	int hiMarker[3] = {142, 141, 255};
+
+	Mat hsv;
+
+	vector<vector<Point>> contours;
+
+	cvtColor(in, hsv, COLOR_BGR2HSV);
+	inRange(
+		hsv,
+		Scalar(loMarker[0], loMarker[1], loMarker[2]),
+		Scalar(hiMarker[0], hiMarker[1], hiMarker[2]),
+		hsv
+	);
+
+	findContours(hsv, contours, RETR_LIST, CHAIN_APPROX_TC89_KCOS);
+	sort(
+		contours.begin(),
+		contours.end(),
+		[](auto &a, auto &b) {
+			return contourArea(a, false) > contourArea(b, false);
+		}
+	);
+
+	if(contours.size() > 1) {
+		Rect rect = Rect();
+		for(auto c:contours) {
+			Rect br = boundingRect(c);
+			int area = br.area();
+			if(area > rect.area()) {
+				rect = br;
+			}
+		}
+		cx = rect.x + rect.width / 2;
+		cy = rect.y + rect.height / 2;
+
+
+		if(cx < scanHalfX && cy < scanHalfY) {
+			//Do nothing
+		} else
+		if (cx > scanHalfX && cy < scanHalfY) {
+			rotate(in, out, ROTATE_90_CLOCKWISE);
+		} else
+		if (cx < scanHalfX && cy > scanHalfY) {
+			rotate(in, out, ROTATE_90_COUNTERCLOCKWISE);
+		} else
+		if (cx > scanHalfX && cy > scanHalfY) {
+			rotate(in, out, ROTATE_180);
+		}
+	}
 }
 
 int main() {
     char key;
-
 	VideoCapture cap(0);
-
 	Mat frame, scan;
 
 	do {
@@ -87,6 +138,7 @@ int main() {
             key = (waitKey(1000.0/60.0)&0x0ff);
 
 			findAndCutDocument(frame, scan);
+			rotateDocument(scan, scan);
 
             imshow("Scan", scan);
             imshow("Edge", frame);
