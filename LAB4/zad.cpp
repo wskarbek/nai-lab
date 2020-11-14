@@ -12,6 +12,12 @@ bool compareY(Point p1, Point p2) { return p1.y < p2.y; }
 bool compareDist(pair<Point, Point> p1, pair<Point, Point> p2) { return norm(p1.first - p1.second) < norm(p2.first - p2.second); }
 double _distance(Point p1, Point p2) { return sqrt(pow(p1.x - p2.x, 2)) + pow(p1.y - p2.y, 2); }
 
+bool compareContourAreas (vector<Point> c1, vector<Point> c2) {
+	double i = fabs( contourArea(Mat(c1)));
+	double j = fabs( contourArea(Mat(c2)));
+	return ( i > j );
+}
+
 void orderPoints(vector<Point> inpts, vector<Point> &ordered)
 {
 	sort(inpts.begin(), inpts.end(), compareX);
@@ -83,8 +89,8 @@ int main() {
             Canny(gray, gray, 75, 200);
 
             vector<vector<Point>> contours;
-            vector<vector<Point>> approx;
             vector<Vec4i> hierarchy;
+
             findContours(gray, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
 			sort(
 				contours.begin(),
@@ -93,23 +99,23 @@ int main() {
 					return contourArea(a, false) > contourArea(b, false);
 			 	}
             );
-
+            vector<vector<Point>> approx(contours.size());
 			size_t i;
 
 			for(i = 0; i < contours.size(); i++) {
-				double peri = arcLength(contours[i], true);
-				approxPolyDP(contours[i], approx[i], 0.02 * peri, true);
+				double peri = arcLength(contours.at(i), true);
+				approxPolyDP(contours.at(i), approx.at(i), 0.02 * peri, true);
 			}
 			
-			//sort(approx.begin(), approx.end(), compareContourAreas);
+			sort(approx.begin(), approx.end(), compareContourAreas);
 
 			for(i = 0; i < approx.size(); i++) {
 				drawContours(frame, approx, i, Scalar(0,0,255), 3);
-				if(approx[i].size() == 4) break;
+				if(approx.at(i).size() == 4) break;
 			}
 
 			if(i < approx.size()) {
-				fourPointTransform(frame, scan, approx[i]);
+				fourPointTransform(frame, scan, approx.at(i));
 				cvtColor(scan, scan, COLOR_BGR2GRAY, 1);
 				imshow("Scan", scan);
 			}
