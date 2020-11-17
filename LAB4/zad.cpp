@@ -7,6 +7,38 @@
 using namespace std;
 using namespace cv;
 
+void fixPointsOrder(vector<Point> in, vector<Point> &out) {
+	sort(
+		in.begin(),
+		in.end(),
+		[](auto &a, auto&b) {
+			return a.y < b.y;
+		}
+	);
+	sort(
+		in.begin(),
+		in.begin()+2,
+		[](auto &a, auto&b) {
+			return a.x < b.x;
+		}
+	);
+	Point tl(in.at(0));
+	Point tr(in.at(1));
+	sort(
+		in.end()-2,
+		in.end(),
+		[](auto &a, auto &b) {
+			return a.x > b.x;
+		}
+	);
+	Point br(in.at(2));
+	Point bl(in.at(3));
+	out.push_back(tl);
+	out.push_back(tr);
+	out.push_back(br);
+	out.push_back(bl);
+} 
+
 void findAndCutDocument(Mat in, Mat &out) {
 	Mat gray;
 
@@ -34,39 +66,42 @@ void findAndCutDocument(Mat in, Mat &out) {
 	//Contour approximation
 	for(i = 0; i < contours.size(); i++) {
 		double peri = arcLength(contours.at(i), true);
-		approxPolyDP(contours.at(i), approx.at(i), 0.02 * peri, true);
+		approxPolyDP(contours.at(i), approx.at(i), (0.01 * peri), true);
 	}
 	
 	//Find rect (document)
 	vector<vector<Point>> docContour;
 	for(i = 0; i < approx.size(); i++) {
-		drawContours(in, approx, i, Scalar(0,0,255), 3);
-		if(approx.at(i).size() == 4) {
+		drawContours(in, approx, i, Scalar(0,128,128), 3);
+		if(approx.at(i).size() == 4) {		
 			docContour.push_back(approx.at(i));
-			break;
 		}
 	}
 	
 	//If document exists, cut it out and transform it
 	if (docContour.size() > 0) {
-		sort(docContour.begin(), docContour.end(),
-			[](auto &a, auto &b) {
-				return contourArea(a, true) > contourArea(b, true);
-			}
-		);
+
+		vector<Point> fixedPoints;
+		fixPointsOrder(docContour.at(0), fixedPoints);
 
 		Mat dst(Size(300,200), CV_8UC3);
-		vector<Point2f> _src = {{0,0}, {dst.cols, 0}, {dst.cols, dst.rows}, {0, dst.rows}};
+		vector<Point2f> _src = {{0,0}, {(float)dst.cols, 0}, {(float)dst.cols, (float)dst.rows}, {0, (float)dst.rows}};
 		vector<Point2f> _dst;
 		
-		for (auto p: docContour.at(0)) {
+		for (auto p: fixedPoints) {
 			_dst.push_back(Point2f(p.x, p.y));
+			
 		}
 
+		for (int i = 0; i < _dst.size(); i ++) {
+			cout << " " << i << ":: x:" << _dst[i].x << " y: " << _dst[i].y;
+		}
+		cout << endl;
+
 		auto wrapMat = getPerspectiveTransform(_dst, _src);
-		warpPerspective(in, dst, wrapMat, Size(dst.cols, dst.rows));
-		flip(dst, dst, +1);
-		out = dst.clone();
+		warpPerspective(in, out, wrapMat, Size(dst.cols, dst.rows));
+		
+		//out = dst.clone();
 	}
 }
 
@@ -76,8 +111,10 @@ void rotateDocument(Mat in, Mat &out) {
 
 	int cx, cy;
 
-	int loMarker[3] = {116, 56, 206};
-	int hiMarker[3] = {142, 141, 255};
+	//int loMarker[3] = {116, 56, 206};
+	//int hiMarker[3] = {142, 141, 255};
+	int loMarker[3] = {0, 116, 78};
+	int hiMarker[3] = {24, 255, 255};
 
 	Mat hsv;
 
@@ -109,21 +146,25 @@ void rotateDocument(Mat in, Mat &out) {
 				rect = br;
 			}
 		}
+		rectangle(in, rect, Scalar(255,255,0), 3);
 		cx = rect.x + rect.width / 2;
 		cy = rect.y + rect.height / 2;
 
 
-		if(cx < scanHalfX && cy < scanHalfY) {
-			//Do nothing
-		} else
-		if (cx > scanHalfX && cy < scanHalfY) {
-			rotate(in, out, ROTATE_90_CLOCKWISE);
-		} else
-		if (cx < scanHalfX && cy > scanHalfY) {
-			rotate(in, out, ROTATE_90_COUNTERCLOCKWISE);
-		} else
-		if (cx > scanHalfX && cy > scanHalfY) {
+		if(cx < scanHalfX && cy < scanHalfY) {//Top left
 			rotate(in, out, ROTATE_180);
+			cout << "Top left\n";
+		} else
+		if (cx > scanHalfX && cy < scanHalfY) {//Top right
+			rotate(in, out, ROTATE_90_CLOCKWISE);
+			cout << "Top right\n";
+		} else
+		if (cx < scanHalfX && cy > scanHalfY) {//Bottom left
+			rotate(in, out, ROTATE_90_COUNTERCLOCKWISE);
+			cout << "Bottom left\n";
+		} else
+		if (cx > scanHalfX && cy > scanHalfY) {//Bottom right
+			cout << "Bottom right\n";
 		}
 	}
 }
@@ -139,7 +180,8 @@ int main() {
 
 			findAndCutDocument(frame, scan);
 			rotateDocument(scan, scan);
-
+			
+			//flip(scan, scan, -1);
             imshow("Scan", scan);
             imshow("Edge", frame);
 
