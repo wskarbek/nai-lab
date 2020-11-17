@@ -84,7 +84,7 @@ void findAndCutDocument(Mat in, Mat &out) {
 		vector<Point> fixedPoints;
 		fixPointsOrder(docContour.at(0), fixedPoints);
 
-		Mat dst(Size(300,200), CV_8UC3);
+		Mat dst(Size(720,480), CV_8UC3);
 		vector<Point2f> _src = {{0,0}, {(float)dst.cols, 0}, {(float)dst.cols, (float)dst.rows}, {0, (float)dst.rows}};
 		vector<Point2f> _dst;
 		
@@ -100,8 +100,6 @@ void findAndCutDocument(Mat in, Mat &out) {
 
 		auto wrapMat = getPerspectiveTransform(_dst, _src);
 		warpPerspective(in, out, wrapMat, Size(dst.cols, dst.rows));
-		
-		//out = dst.clone();
 	}
 }
 
@@ -111,8 +109,6 @@ void rotateDocument(Mat in, Mat &out) {
 
 	int cx, cy;
 
-	//int loMarker[3] = {116, 56, 206};
-	//int hiMarker[3] = {142, 141, 255};
 	int loMarker[3] = {0, 116, 78};
 	int hiMarker[3] = {24, 255, 255};
 
@@ -157,10 +153,12 @@ void rotateDocument(Mat in, Mat &out) {
 		} else
 		if (cx > scanHalfX && cy < scanHalfY) {//Top right
 			rotate(in, out, ROTATE_90_CLOCKWISE);
+			resize(out, out, Size(in.cols, in.rows));
 			cout << "Top right\n";
 		} else
-		if (cx < scanHalfX && cy > scanHalfY) {//Bottom left
+		if (cx < scanHalfX && cy > scanHalfY) {//Bottom left4
 			rotate(in, out, ROTATE_90_COUNTERCLOCKWISE);
+			resize(out, out, Size(in.cols, in.rows));
 			cout << "Bottom left\n";
 		} else
 		if (cx > scanHalfX && cy > scanHalfY) {//Bottom right
@@ -182,6 +180,9 @@ int main() {
 			rotateDocument(scan, scan);
 			
 			//flip(scan, scan, -1);
+			imwrite("scan.png", scan);
+
+			resize(frame, frame, Size(720, 480));
             imshow("Scan", scan);
             imshow("Edge", frame);
 
