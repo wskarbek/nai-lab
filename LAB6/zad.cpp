@@ -41,7 +41,7 @@ std::vector<double> generate_random_x(int n, int min, int max) {
     return ret;
 }
 
-auto best = [](auto function, int n = 100, int iterations = 100, double minDomain = -10, double maxDomain = 10) {
+auto best = [](auto function, int n = 100, int iterations = 1000, double minDomain = -10, double maxDomain = 10) {
     using namespace std;
 
     double min = minDomain;
@@ -69,8 +69,7 @@ std::map<std::string, std::string> process_args(int argc, char **argv) {
     using namespace std;
 
     map<string, string> args;
-    string argname = "-m";
-    args[argname] = "tabu";
+    string argname = "";
     for (auto arg : vector<string>(argv + 1, argv + argc)) {
         if (arg.size() && arg[0] == '-') {
             argname = arg;
@@ -86,7 +85,10 @@ int main(int argc, char **argv) {
 
     map<string, string> args = process_args(argc, argv);
 
-    int min, max, iterations;
+    vector<double> bestXs;
+
+    int iterations = 0, n = 0;//, min = 0, max = 0;
+    bool params = false;
 
     //Sphere function
     auto sphere_f = [](vector<double> x) {
@@ -111,11 +113,16 @@ int main(int argc, char **argv) {
         return sum;
     };
 
-    vector<double> bestXs;
+    if (args.find("-i") != args.end()) iterations = stoi(args["-i"]);
+    if (args.find("-n") != args.end()) n = stoi(args["-n"]);
+    /*if (args.find("-min") != args.end()) min = stoi(args["-min"]);
+    if (args.find("-max") != args.end()) max = stoi(args["-max"]);*/
+
+    if (iterations > 0 && n > 1/* && min != 0 && max != 0*/) params = true;
 
     if (args.find("-f") != args.end()) {
         if (args["-f"] == "sphere") {
-            bestXs = best(sphere_f);
+            bestXs = params ? best(sphere_f, n, iterations/*, min, max*/) : best(sphere_f);
             save_plot("sphere");
         }
         if (args["-f"] == "matyas") {
@@ -123,7 +130,7 @@ int main(int argc, char **argv) {
             save_plot("matyas");
         }
         if (args["-f"] == "rosenbrock") {
-            bestXs = best(rosenbrock_f);
+            bestXs = params ? best(rosenbrock_f, n, iterations/*, min, max*/) : best(rosenbrock_f);
             save_plot("rosenbrock");
         }
     }
