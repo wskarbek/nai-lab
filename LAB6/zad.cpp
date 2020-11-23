@@ -13,6 +13,20 @@
 #include <numeric>
 #include <fstream>
 
+std::vector<double> solutionTime;
+
+void save_plot(std::string name) {
+    using namespace std;
+
+    ofstream file(name + ".txt");
+    if (file.is_open()) {
+        for(int i = 0; i < solutionTime.size(); i++) {
+            file << (i + 1) << " " << solutionTime.at(i) << endl;
+        }
+        file.close();
+    }
+}
+
 std::vector<double> generate_random_x(int n, int min, int max) {
     using namespace std;
 
@@ -27,7 +41,7 @@ std::vector<double> generate_random_x(int n, int min, int max) {
     return ret;
 }
 
-auto best = [](auto function, int n, int iterations = 1000, double minDomain = -10, double maxDomain = 10) {
+auto best = [](auto function, int n = 100, int iterations = 100, double minDomain = -10, double maxDomain = 10) {
     using namespace std;
 
     double min = minDomain;
@@ -42,7 +56,9 @@ auto best = [](auto function, int n, int iterations = 1000, double minDomain = -
             double newSolution = function(randomXs);
             if (newSolution > solution) {
                 bestXs = randomXs;
+                solution = newSolution;
             }
+            solutionTime.push_back(solution);
         }
     }
     
@@ -99,13 +115,16 @@ int main(int argc, char **argv) {
 
     if (args.find("-f") != args.end()) {
         if (args["-f"] == "sphere") {
-            bestXs = best(sphere_f, 10);
+            bestXs = best(sphere_f);
+            save_plot("sphere");
         }
         if (args["-f"] == "matyas") {
-            bestXs = best(matyas_f, 2);
+            bestXs = best(matyas_f, 2, 100);
+            save_plot("matyas");
         }
         if (args["-f"] == "rosenbrock") {
-            bestXs = best(rosenbrock_f, 10);
+            bestXs = best(rosenbrock_f);
+            save_plot("rosenbrock");
         }
     }
 
