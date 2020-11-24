@@ -15,16 +15,37 @@
 
 std::vector<double> solutionTime;
 
-void save_plot(std::string name) {
+std::vector<std::vector<double>> solutionTimes;
+
+void save_plot(std::vector<double> solTimes, std::string name) {
     using namespace std;
 
     ofstream file(name + ".txt");
     if (file.is_open()) {
-        for(int i = 0; i < solutionTime.size(); i++) {
-            file << (i + 1) << " " << solutionTime.at(i) << endl;
+        for(int i = 0; i < solTimes.size(); i++) {
+            file << (i + 1) << " " << solTimes.at(i) << endl;
         }
         file.close();
     }
+}
+
+void save_plot_avg(std::string name) {
+    using namespace std;
+
+    std::vector<double> solutionTimeAvg;
+
+    cout << solutionTimes.at(0).size();
+    save_plot(solutionTimes.at(0), (name + "_test"));
+    for (int j = 0; j < solutionTimes.at(0).size(); j++) {
+        double avg = 0;
+        for(int i = 0; i < solutionTimes.size(); i++) {
+            avg += solutionTimes.at(i).at(j);
+        }
+        avg /= solutionTimes.size();
+        cout << "AVG[" << j << "]: " << avg << endl;
+        solutionTimeAvg.push_back(avg);
+    }
+    save_plot(solutionTimeAvg, (name + "_avg"));
 }
 
 std::vector<double> generate_random_x(int n, int min, int max) {
@@ -88,7 +109,7 @@ int main(int argc, char **argv) {
     vector<double> bestXs;
 
     int iterations = 0, n = 0;//, min = 0, max = 0;
-    bool params = false;
+    bool params = false, tests = false;
 
     //Sphere function
     auto sphere_f = [](vector<double> x) {
@@ -97,7 +118,7 @@ int main(int argc, char **argv) {
         return sum;
     };
     
-    //Matyas function
+    //Matyas function   
     auto matyas_f = [](vector<double> xi) {
         double x = xi.at(0);
         double y = xi.at(1);
@@ -115,6 +136,7 @@ int main(int argc, char **argv) {
 
     if (args.find("-i") != args.end()) iterations = stoi(args["-i"]);
     if (args.find("-n") != args.end()) n = stoi(args["-n"]);
+    if (args.find("-t") != args.end()) tests = (bool)stoi(args["-t"]);
     /*if (args.find("-min") != args.end()) min = stoi(args["-min"]);
     if (args.find("-max") != args.end()) max = stoi(args["-max"]);*/
 
@@ -122,16 +144,42 @@ int main(int argc, char **argv) {
 
     if (args.find("-f") != args.end()) {
         if (args["-f"] == "sphere") {
-            bestXs = params ? best(sphere_f, n, iterations/*, min, max*/) : best(sphere_f);
-            save_plot("sphere");
+            if(tests) {
+                for(int i = 0; i < 20; i++) {
+                    bestXs = params ? best(sphere_f, n, iterations/*, min, max*/) : best(sphere_f);
+                    solutionTimes.push_back(solutionTime);
+                }
+                save_plot_avg("sphere");
+            } else {
+                bestXs = params ? best(sphere_f, n, iterations/*, min, max*/) : best(sphere_f);
+                save_plot(solutionTime, "sphere");
+            }
         }
         if (args["-f"] == "matyas") {
-            bestXs = best(matyas_f, 2, 100, -10, 10);
-            save_plot("matyas");
+            if (tests) {
+                for (int i = 0; i < 20; i++) {
+                    bestXs = best(matyas_f, 2, 100, -10, 10);
+                    solutionTimes.push_back(solutionTime);
+                    cout << solutionTimes.size() << " " << solutionTimes.back().size() << endl;
+                    solutionTime.clear();
+                }
+                save_plot_avg("matyas");
+            } else {
+                bestXs = best(matyas_f, 2, 100, -10, 10);
+                save_plot(solutionTime, "matyas");
+            }
         }
         if (args["-f"] == "rosenbrock") {
-            bestXs = params ? best(rosenbrock_f, n, iterations/*, min, max*/) : best(rosenbrock_f);
-            save_plot("rosenbrock");
+            if (tests) {
+                for (int i = 0; i < 20; i++) {
+                    bestXs = params ? best(rosenbrock_f, n, iterations/*, min, max*/) : best(rosenbrock_f);
+                    solutionTimes.push_back(solutionTime);
+                }
+                save_plot_avg("rosenbrock");
+            } else {
+                bestXs = params ? best(rosenbrock_f, n, iterations/*, min, max*/) : best(rosenbrock_f);
+                save_plot(solutionTime, "rosenbrock");
+            }
         }
     }
 
