@@ -13,10 +13,6 @@
 #include <numeric>
 #include <fstream>
 
-std::vector<double> solutionTime;
-
-std::vector<std::vector<double>> solutionTimes;
-
 void save_plot(std::vector<double> solTimes, std::string name) {
     using namespace std;
 
@@ -29,7 +25,7 @@ void save_plot(std::vector<double> solTimes, std::string name) {
     }
 }
 
-void save_plot_avg(std::string name) {
+void save_plot_avg(std::vector<std::vector<double>> solutionTimes, std::string name) {
     using namespace std;
 
     std::vector<double> solutionTimeAvg;
@@ -62,7 +58,7 @@ std::vector<double> generate_random_x(int n, int min, int max) {
     return ret;
 }
 
-auto best = [](auto function, int n = 10, int iterations = 1000, double minDomain = -100, double maxDomain = 100) {
+auto best = [](auto function, std::vector<double> & solutionTime, int n = 10, int iterations = 1000, double minDomain = -100, double maxDomain = 100) {
     using namespace std;
 
     double min = minDomain;
@@ -144,40 +140,46 @@ int main(int argc, char **argv) {
 
     if (args.find("-f") != args.end()) {
         if (args["-f"] == "sphere") {
+            std::vector<double> solutionTime;
             if(tests) {
+                std::vector<std::vector<double>> solutionTimes;
                 for(int i = 0; i < 20; i++) {
-                    bestXs = params ? best(sphere_f, n, iterations/*, min, max*/) : best(sphere_f);
+                    bestXs = params ? best(sphere_f, solutionTime, n, iterations/*, min, max*/) : best(sphere_f, solutionTime);
                     solutionTimes.push_back(solutionTime);
+                    solutionTime.clear();
                 }
-                save_plot_avg("sphere");
+                save_plot_avg(solutionTimes, "sphere");
             } else {
-                bestXs = params ? best(sphere_f, n, iterations/*, min, max*/) : best(sphere_f);
+                bestXs = params ? best(sphere_f, solutionTime, n, iterations/*, min, max*/) : best(sphere_f, solutionTime);
                 save_plot(solutionTime, "sphere");
             }
         }
         if (args["-f"] == "matyas") {
-            if (tests) {
+            std::vector<double> solutionTime;
+            if (tests) {   
+                std::vector<std::vector<double>> solutionTimes;
                 for (int i = 0; i < 20; i++) {
-                    bestXs = best(matyas_f, 2, 100, -10, 10);
+                    bestXs = best(matyas_f, solutionTime, 2, 100, -10, 10);
                     solutionTimes.push_back(solutionTime);
-                    cout << solutionTimes.size() << " " << solutionTimes.back().size() << endl;
                     solutionTime.clear();
                 }
-                save_plot_avg("matyas");
+                save_plot_avg(solutionTimes, "matyas");
             } else {
-                bestXs = best(matyas_f, 2, 100, -10, 10);
+                bestXs = best(matyas_f, solutionTime, 2, 100, -10, 10);
                 save_plot(solutionTime, "matyas");
             }
         }
         if (args["-f"] == "rosenbrock") {
+            std::vector<double> solutionTime;
             if (tests) {
+                std::vector<std::vector<double>> solutionTimes;
                 for (int i = 0; i < 20; i++) {
-                    bestXs = params ? best(rosenbrock_f, n, iterations/*, min, max*/) : best(rosenbrock_f);
+                    bestXs = params ? best(rosenbrock_f, solutionTime, n, iterations/*, min, max*/) : best(rosenbrock_f, solutionTime);
                     solutionTimes.push_back(solutionTime);
                 }
-                save_plot_avg("rosenbrock");
+                save_plot_avg(solutionTimes, "rosenbrock");
             } else {
-                bestXs = params ? best(rosenbrock_f, n, iterations/*, min, max*/) : best(rosenbrock_f);
+                bestXs = params ? best(rosenbrock_f, solutionTime, n, iterations/*, min, max*/) : best(rosenbrock_f, solutionTime);
                 save_plot(solutionTime, "rosenbrock");
             }
         }
