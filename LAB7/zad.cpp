@@ -90,7 +90,7 @@ auto best = [](auto function, std::vector<double> & solutionTime, bool neighbour
                 randomXs = generate_random_x(n, minDomain, maxDomain);
             }
             double newSolution = function(randomXs);
-            if (newSolution > solution) {
+            if (newSolution < solution) {
                 bestXs = randomXs;
                 solution = newSolution;
             }
