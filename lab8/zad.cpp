@@ -100,7 +100,7 @@ auto best = [](auto function, int iterations = 1000) {
         if (fitness(new_solution) > fitness(solution)) {
             best_point = point;
             solution = new_solution;
-            cout << "New best fenotype[" << i << "]:: X:" <<  best_point.x << " Y:" << best_point.y << " FIT:" << fitness(new_solution) << endl;
+            cout << "New best phenotype[" << i << "]:: X:" <<  best_point.x << " Y:" << best_point.y << " Result:" << new_solution << " FIT:" << fitness(new_solution) << endl;
         }
     }
     return best_point;
